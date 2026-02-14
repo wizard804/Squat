@@ -3,153 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Squat | Dashboard</title>
+    <title>Squat | Général</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         :root {
-            --bg-darker: #1E1F22;
-            --bg-dark: #2B2D31;
+            --bg-channels: #2B2D31;
             --bg-chat: #313338;
+            --bg-members: #2B2D31;
+            --bg-input: #383A40;
             --text-main: #DBDEE1;
             --text-muted: #949BA4;
-            --discord-blurple: #5865F2;
-            --green: #23a559;
+            --blurple: #5865F2;
             --header-shadow: 0 1px 0 rgba(0,0,0,0.2);
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif; overflow: hidden; background: var(--bg-darker); }
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg-chat); color: white; overflow: hidden; 
+        }
 
         .app-container { display: flex; height: 100vh; width: 100vw; }
 
-        /* Barre des serveurs */
-        .server-sidebar {
-            width: 72px; background-color: var(--bg-darker);
-            display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 8px;
+        /* 1. Colonne de Gauche (Le Salon Unique) */
+        .sidebar-channels {
+            width: 240px; background: var(--bg-channels);
+            display: flex; flex-direction: column; flex-shrink: 0;
         }
-        .server-icon {
-            width: 48px; height: 48px; background: var(--bg-dark); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; color: white;
-            cursor: pointer; transition: 0.2s; font-size: 20px;
+
+        .header-box {
+            height: 48px; padding: 0 16px; display: flex; align-items: center;
+            font-weight: bold; font-size: 15px; box-shadow: var(--header-shadow);
+            z-index: 2;
         }
-        .server-icon:hover { border-radius: 15px; background: var(--discord-blurple); }
-        .server-icon.active { border-radius: 15px; background: var(--discord-blurple); }
 
-        /* Barre des salons */
-        .channel-sidebar { width: 240px; background-color: var(--bg-dark); display: flex; flex-direction: column; }
-        .server-header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; color: white; box-shadow: var(--header-shadow); font-size: 15px; }
-        .channel-list { padding: 10px; flex-grow: 1; }
-        .category { color: var(--text-muted); font-size: 12px; font-weight: bold; text-transform: uppercase; padding: 18px 8px 8px; }
-        .channel-item { padding: 6px 8px; color: var(--text-muted); cursor: pointer; border-radius: 4px; display: flex; align-items: center; margin-bottom: 2px; }
-        .channel-item:hover { background: #35373c; color: var(--text-main); }
-        .channel-item.active { background: #3f4147; color: white; }
-
-        /* Zone de Chat */
-        .chat-main { flex-grow: 1; display: flex; flex-direction: column; background: var(--bg-chat); }
-        .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; color: white; font-weight: bold; box-shadow: var(--header-shadow); }
-        .message-list { flex-grow: 1; overflow-y: auto; padding: 20px 0; }
+        .channel-list { padding: 20px 8px; flex-grow: 1; }
         
-        .message { display: flex; padding: 2px 16px; gap: 16px; transition: background 0.1s; }
-        .message:hover { background: rgba(0,0,0,0.05); }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
-        .message-content { display: flex; flex-direction: column; }
-        .msg-info { display: flex; align-items: baseline; gap: 8px; }
-        .msg-author { color: white; font-weight: 500; font-size: 1rem; cursor: pointer; }
-        .msg-author:hover { text-decoration: underline; }
-        .msg-time { color: var(--text-muted); font-size: 0.75rem; }
-        .msg-text { color: var(--text-main); font-size: 0.95rem; line-height: 1.3; }
+        .channel-active {
+            background: #3F4147; color: white;
+            padding: 8px 12px; border-radius: 4px;
+            display: flex; align-items: center; cursor: default;
+        }
 
-        /* Zone de saisie */
-        .input-area { padding: 0 16px 24px; }
-        .input-wrapper { background: #383a40; border-radius: 8px; padding: 11px 16px; display: flex; align-items: center; }
-        #chat-input { background: transparent; border: none; color: var(--text-main); width: 100%; outline: none; font-size: 1rem; }
+        /* 2. Zone de Chat (Milieu) */
+        .chat-area { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
 
-        /* Liste membres */
-        .member-sidebar { width: 240px; background: var(--bg-dark); padding: 20px 8px; }
+        .chat-messages {
+            flex-grow: 1; overflow-y: auto; padding: 20px;
+            display: flex; flex-direction: column; gap: 18px;
+        }
+
+        /* Style des messages */
+        .message { display: flex; gap: 16px; }
+        .avatar { 
+            width: 40px; height: 40px; border-radius: 50%; 
+            background: var(--blurple); display: flex; align-items: center; 
+            justify-content: center; font-weight: bold; flex-shrink: 0;
+        }
+        .msg-content { display: flex; flex-direction: column; }
+        .msg-user { color: white; font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+        .msg-text { color: var(--text-main); font-size: 15px; line-height: 1.4; word-break: break-word; }
+
+        /* Input Zone */
+        .input-container { padding: 0 20px 24px; }
+        .input-wrapper {
+            background: var(--bg-input); border-radius: 8px;
+            padding: 10px 16px; display: flex; align-items: center;
+        }
+        #chat-input {
+            background: transparent; border: none; color: white;
+            width: 100%; outline: none; font-size: 15px;
+        }
+
+        /* 3. Colonne de Droite (Membres) */
+        .sidebar-members {
+            width: 240px; background: var(--bg-members);
+            padding: 20px 16px; flex-shrink: 0;
+        }
+        .member-title {
+            color: var(--text-muted); font-size: 12px; font-weight: bold;
+            text-transform: uppercase; margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <nav class="server-sidebar">
-        <div class="server-icon active"><i class="fa-solid fa-house"></i></div>
-        <div style="width: 32px; height: 2px; background: #35363c;"></div>
-        <div class="server-icon">S</div>
-        <div class="server-icon" style="color: var(--green)"><i class="fa-solid fa-plus"></i></div>
-    </nav>
-
-    <aside class="channel-sidebar">
-        <div class="server-header">🏠 Le Squat</div>
+    <aside class="sidebar-channels">
+        <div class="header-box">🏠 Squat</div>
         <div class="channel-list">
-            <div class="category">Salons textuels</div>
-            <div class="channel-item active"><i class="fa-solid fa-hashtag" style="margin-right: 6px;"></i> général</div>
-            <div class="channel-item"><i class="fa-solid fa-hashtag" style="margin-right: 6px;"></i> gaming</div>
-            <div class="channel-item"><i class="fa-solid fa-hashtag" style="margin-right: 6px;"></i> dev-stuff</div>
+            <div class="channel-active">
+                <i class="fa-solid fa-hashtag" style="margin-right: 8px; color: var(--text-muted);"></i>
+                général
+            </div>
         </div>
     </aside>
 
-    <main class="chat-main">
-        <div class="chat-header">
-            <i class="fa-solid fa-hashtag" style="color: var(--text-muted); margin-right: 8px;"></i> général
+    <main class="chat-area">
+        <div class="header-box">
+            <i class="fa-solid fa-hashtag" style="color: var(--text-muted); margin-right: 10px;"></i>
+            général
         </div>
-        
-        <div class="message-list" id="message-list"></div>
 
-        <div class="input-area">
+        <div class="chat-messages" id="output">
+            <div class="message">
+                <div class="avatar" style="background: #23a559">S</div>
+                <div class="msg-content">
+                    <span class="msg-user">Système Squat</span>
+                    <span class="msg-text">Bienvenue dans le salon général. Tout le monde te voit ici !</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
             <form id="chat-form" class="input-wrapper">
                 <input type="text" id="chat-input" placeholder="Envoyer un message dans #général" autocomplete="off">
             </form>
         </div>
     </main>
 
-    <aside class="member-sidebar">
-        <div class="category">En ligne — 1</div>
-        <div class="channel-item">
-            <div class="avatar" style="width: 32px; height: 32px; font-size: 12px; background: var(--discord-blurple); margin-right: 8px;">YOU</div>
-            <span style="color: var(--text-main)">Toi</span>
+    <aside class="sidebar-members">
+        <div class="member-title">Membres — 1</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="avatar" style="width: 32px; height: 32px; font-size: 12px;">TOI</div>
+            <span id="my-name-display" style="color: var(--text-main); font-size: 14px;">Anonyme</span>
         </div>
     </aside>
 </div>
 
-<script src="/socket.io/socket.io.js"></script>
 <script>
-    const socket = io();
+    // --- CONNEXION SUPABASE ---
+    // Remplace par tes clés Supabase pour que tes potes puissent vraiment voir tes messages
+    const SUPABASE_URL = 'https://TON_PROJET.supabase.co';
+    const SUPABASE_KEY = 'TA_CLE_PUBLIQUE';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const form = document.getElementById('chat-form');
     const input = document.getElementById('chat-input');
-    const msgList = document.getElementById('message-list');
+    const output = document.getElementById('output');
+    
+    // Demander le pseudo et l'afficher à droite
+    const pseudo = prompt("Choisis ton blaze pour Squatter :") || "Anonyme";
+    document.getElementById('my-name-display').innerText = pseudo;
 
-    const pseudo = prompt("Ton pseudo pour le Squat :") || "Anonyme";
-    const myColor = '#' + Math.floor(Math.random()*16777215).toString(16);
-
-    function addMessage(data) {
+    // Afficher un message
+    function renderMessage(user, text) {
         const div = document.createElement('div');
         div.className = 'message';
         div.innerHTML = `
-            <div class="avatar" style="background: ${data.color || '#5865f2'}">${data.user.charAt(0).toUpperCase()}</div>
-            <div class="message-content">
-                <div class="msg-info">
-                    <span class="msg-author" style="color: ${data.color}">${data.user}</span>
-                    <span class="msg-time">${data.time}</span>
-                </div>
-                <span class="msg-text">${data.text}</span>
+            <div class="avatar">${user.charAt(0).toUpperCase()}</div>
+            <div class="msg-content">
+                <span class="msg-user">${user}</span>
+                <span class="msg-text">${text}</span>
             </div>
         `;
-        msgList.appendChild(div);
-        msgList.scrollTop = msgList.scrollHeight;
+        output.appendChild(div);
+        output.scrollTop = output.scrollHeight;
     }
 
-    socket.on('load messages', (history) => {
-        history.forEach(addMessage);
-    });
-
-    form.addEventListener('submit', (e) => {
+    // Envoyer un message
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (input.value.trim()) {
-            socket.emit('chat message', { user: pseudo, text: input.value, color: myColor });
+            const message = input.value;
             input.value = '';
+
+            // Envoyer à Supabase (Table : messages / Colonnes : username, content)
+            await supabase.from('messages').insert([{ username: pseudo, content: message }]);
         }
     });
 
-    socket.on('chat message', addMessage);
+    // Écouter les nouveaux messages des autres en direct
+    supabase
+        .channel('room1')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+            renderMessage(payload.new.username, payload.new.content);
+        })
+        .subscribe();
 </script>
+
 </body>
 </html>
