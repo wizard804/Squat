@@ -2,187 +2,218 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Squat | Général</title>
+    <title>Squat | Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
         :root {
-            --bg-channels: #2B2D31;
-            --bg-chat: #313338;
-            --bg-members: #2B2D31;
-            --bg-input: #383A40;
-            --text-main: #DBDEE1;
-            --text-muted: #949BA4;
+            --bg-black: #0B0B0C;
+            --bg-darker: #111214;
+            --bg-input: #1E1F22;
             --blurple: #5865F2;
-            --header-shadow: 0 1px 0 rgba(0,0,0,0.2);
+            --text-main: #E0E1E5;
+            --text-muted: #949BA4;
         }
 
-        body, html { 
-            margin: 0; padding: 0; height: 100%; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: var(--bg-chat); color: white; overflow: hidden; 
-        }
-
-        .app-container { display: flex; height: 100vh; width: 100vw; }
-
-        /* 1. Colonne de Gauche (Le Salon Unique) */
-        .sidebar-channels {
-            width: 240px; background: var(--bg-channels);
-            display: flex; flex-direction: column; flex-shrink: 0;
-        }
-
-        .header-box {
-            height: 48px; padding: 0 16px; display: flex; align-items: center;
-            font-weight: bold; font-size: 15px; box-shadow: var(--header-shadow);
-            z-index: 2;
-        }
-
-        .channel-list { padding: 20px 8px; flex-grow: 1; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Helvetica Neue', sans-serif; background: var(--bg-black); color: white; overflow: hidden; }
         
-        .channel-active {
-            background: #3F4147; color: white;
-            padding: 8px 12px; border-radius: 4px;
-            display: flex; align-items: center; cursor: default;
+        /* --- Écrans d'authentification --- */
+        #auth-screen {
+            position: fixed; inset: 0; z-index: 100; background: var(--bg-black);
+            display: flex; align-items: center; justify-content: center;
         }
+        .auth-card {
+            background: #18191C; padding: 32px; border-radius: 8px; width: 400px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5); text-align: center;
+        }
+        .auth-card h2 { margin-bottom: 24px; }
+        .auth-card input {
+            width: 100%; padding: 12px; margin-bottom: 16px; border-radius: 4px;
+            border: none; background: #0F0F10; color: white; box-sizing: border-box;
+        }
+        .auth-card button {
+            width: 100%; padding: 12px; background: var(--blurple); border: none;
+            color: white; border-radius: 4px; cursor: pointer; font-weight: bold;
+        }
+        .auth-link { color: var(--blurple); cursor: pointer; font-size: 14px; display: block; margin-top: 15px; }
 
-        /* 2. Zone de Chat (Milieu) */
-        .chat-area { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
-
-        .chat-messages {
-            flex-grow: 1; overflow-y: auto; padding: 20px;
-            display: flex; flex-direction: column; gap: 18px;
-        }
-
-        /* Style des messages */
-        .message { display: flex; gap: 16px; }
-        .avatar { 
-            width: 40px; height: 40px; border-radius: 50%; 
-            background: var(--blurple); display: flex; align-items: center; 
-            justify-content: center; font-weight: bold; flex-shrink: 0;
-        }
-        .msg-content { display: flex; flex-direction: column; }
-        .msg-user { color: white; font-weight: 600; font-size: 15px; margin-bottom: 2px; }
-        .msg-text { color: var(--text-main); font-size: 15px; line-height: 1.4; word-break: break-word; }
-
-        /* Input Zone */
-        .input-container { padding: 0 20px 24px; }
-        .input-wrapper {
-            background: var(--bg-input); border-radius: 8px;
-            padding: 10px 16px; display: flex; align-items: center;
-        }
-        #chat-input {
-            background: transparent; border: none; color: white;
-            width: 100%; outline: none; font-size: 15px;
-        }
-
-        /* 3. Colonne de Droite (Membres) */
-        .sidebar-members {
-            width: 240px; background: var(--bg-members);
-            padding: 20px 16px; flex-shrink: 0;
-        }
-        .member-title {
-            color: var(--text-muted); font-size: 12px; font-weight: bold;
-            text-transform: uppercase; margin-bottom: 15px;
-        }
+        /* --- Interface Principale (Masquée au début) --- */
+        #main-app { display: none; height: 100vh; }
+        .sidebar { width: 240px; background: var(--bg-darker); display: flex; flex-direction: column; border-right: 1px solid #1e1f22; }
+        .chat-container { flex-grow: 1; display: flex; flex-direction: column; background: var(--bg-black); }
+        .header { height: 48px; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid #1e1f22; font-weight: bold; }
+        
+        .messages-list { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        .msg { display: flex; gap: 16px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--blurple); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .msg-text img { max-width: 300px; border-radius: 8px; margin-top: 10px; display: block; }
+        
+        .input-bar { padding: 0 20px 24px; }
+        .input-wrap { background: var(--bg-input); padding: 10px 16px; border-radius: 8px; display: flex; align-items: center; gap: 12px; }
+        .input-wrap input[type="text"] { background: transparent; border: none; color: white; flex-grow: 1; outline: none; }
+        .icon-btn { color: var(--text-muted); cursor: pointer; font-size: 18px; transition: 0.2s; }
+        .icon-btn:hover { color: white; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <aside class="sidebar-channels">
-        <div class="header-box">🏠 Squat</div>
-        <div class="channel-list">
-            <div class="channel-active">
-                <i class="fa-solid fa-hashtag" style="margin-right: 8px; color: var(--text-muted);"></i>
-                général
-            </div>
+    <div id="auth-screen">
+        <div class="auth-card" id="login-form">
+            <h2>Bon retour !</h2>
+            <input type="email" id="login-email" placeholder="E-mail">
+            <input type="password" id="login-pass" placeholder="Mot de passe">
+            <button onclick="login()">Se connecter</button>
+            <span class="auth-link" onclick="toggleAuth(true)">Besoin d'un compte ? S'inscrire</span>
         </div>
-    </aside>
-
-    <main class="chat-area">
-        <div class="header-box">
-            <i class="fa-solid fa-hashtag" style="color: var(--text-muted); margin-right: 10px;"></i>
-            général
+        <div class="auth-card" id="register-form" style="display:none;">
+            <h2>Créer un compte</h2>
+            <input type="text" id="reg-pseudo" placeholder="Pseudo unique">
+            <input type="email" id="reg-email" placeholder="E-mail">
+            <input type="password" id="reg-pass" placeholder="Mot de passe">
+            <button onclick="register()">S'inscrire</button>
+            <span class="auth-link" onclick="toggleAuth(false)">Déjà un compte ?</span>
         </div>
+    </div>
 
-        <div class="chat-messages" id="output">
-            <div class="message">
-                <div class="avatar" style="background: #23a559">S</div>
-                <div class="msg-content">
-                    <span class="msg-user">Système Squat</span>
-                    <span class="msg-text">Bienvenue dans le salon général. Tout le monde te voit ici !</span>
+    <div id="main-app" class="app-container" style="display:flex;">
+        <aside class="sidebar">
+            <div class="header">🏠 Squat</div>
+            <div style="padding: 20px 10px; color: var(--text-muted); font-size: 12px; font-weight: bold;">SALONS TEXTUELS</div>
+            <div style="padding: 10px; background: #35373c22; color: white; margin: 0 8px; border-radius: 4px;"># général</div>
+        </aside>
+
+        <main class="chat-container">
+            <div class="header"># général</div>
+            <div class="messages-list" id="msg-flow"></div>
+            <div class="input-bar">
+                <div class="input-wrap">
+                    <label for="img-upload" class="icon-btn"><i class="fa-solid fa-circle-plus"></i></label>
+                    <input type="file" id="img-upload" hidden accept="image/*">
+                    <input type="text" id="chat-input" placeholder="Envoyer un message dans #général">
                 </div>
             </div>
-        </div>
+        </main>
+    </div>
 
-        <div class="input-container">
-            <form id="chat-form" class="input-wrapper">
-                <input type="text" id="chat-input" placeholder="Envoyer un message dans #général" autocomplete="off">
-            </form>
-        </div>
-    </main>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-    <aside class="sidebar-members">
-        <div class="member-title">Membres — 1</div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <div class="avatar" style="width: 32px; height: 32px; font-size: 12px;">TOI</div>
-            <span id="my-name-display" style="color: var(--text-main); font-size: 14px;">Anonyme</span>
-        </div>
-    </aside>
-</div>
+        const firebaseConfig = {
+            apiKey: "TA_CLE",
+            authDomain: "TON_DOMAINE",
+            projectId: "TON_ID",
+            storageBucket: "TON_BUCKET",
+            messagingSenderId: "TON_SENDER",
+            appId: "TON_APP"
+        };
 
-<script>
-    // --- CONNEXION SUPABASE ---
-    // Remplace par tes clés Supabase pour que tes potes puissent vraiment voir tes messages
-    const SUPABASE_URL = 'https://TON_PROJET.supabase.co';
-    const SUPABASE_KEY = 'TA_CLE_PUBLIQUE';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
 
-    const form = document.getElementById('chat-form');
-    const input = document.getElementById('chat-input');
-    const output = document.getElementById('output');
-    
-    // Demander le pseudo et l'afficher à droite
-    const pseudo = prompt("Choisis ton blaze pour Squatter :") || "Anonyme";
-    document.getElementById('my-name-display').innerText = pseudo;
+        let currentUserPseudo = "";
 
-    // Afficher un message
-    function renderMessage(user, text) {
-        const div = document.createElement('div');
-        div.className = 'message';
-        div.innerHTML = `
-            <div class="avatar">${user.charAt(0).toUpperCase()}</div>
-            <div class="msg-content">
-                <span class="msg-user">${user}</span>
-                <span class="msg-text">${text}</span>
-            </div>
-        `;
-        output.appendChild(div);
-        output.scrollTop = output.scrollHeight;
-    }
-
-    // Envoyer un message
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (input.value.trim()) {
-            const message = input.value;
-            input.value = '';
-
-            // Envoyer à Supabase (Table : messages / Colonnes : username, content)
-            await supabase.from('messages').insert([{ username: pseudo, content: message }]);
+        // --- AUTH LOGIC ---
+        window.toggleAuth = (showReg) => {
+            document.getElementById('login-form').style.display = showReg ? 'none' : 'block';
+            document.getElementById('register-form').style.display = showReg ? 'block' : 'none';
         }
-    });
 
-    // Écouter les nouveaux messages des autres en direct
-    supabase
-        .channel('room1')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-            renderMessage(payload.new.username, payload.new.content);
-        })
-        .subscribe();
-</script>
+        window.register = async () => {
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-pass').value;
+            const pseudo = document.getElementById('reg-pseudo').value.trim();
 
+            if(!pseudo) return alert("Pseudo requis");
+
+            // Vérifier si le pseudo existe déjà
+            const userDoc = await getDoc(doc(db, "pseudos", pseudo));
+            if(userDoc.exists()) return alert("Ce pseudo est déjà pris !");
+
+            try {
+                const res = await createUserWithEmailAndPassword(auth, email, pass);
+                await setDoc(doc(db, "users", res.user.uid), { pseudo: pseudo });
+                await setDoc(doc(db, "pseudos", pseudo), { uid: res.user.uid });
+                alert("Compte créé !");
+            } catch (err) { alert(err.message); }
+        }
+
+        window.login = async () => {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            try { await signInWithEmailAndPassword(auth, email, pass); } 
+            catch (err) { alert("Erreur de connexion"); }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userSnap = await getDoc(doc(db, "users", user.uid));
+                currentUserPseudo = userSnap.data().pseudo;
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                loadMessages();
+            } else {
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('main-app').style.display = 'none';
+            }
+        });
+
+        // --- MESSAGES & IMAGES ---
+        const input = document.getElementById('chat-input');
+        input.addEventListener('keypress', async (e) => {
+            if(e.key === 'Enter' && input.value) {
+                const text = input.value;
+                input.value = '';
+                await addDoc(collection(db, "messages"), {
+                    user: currentUserPseudo,
+                    text: text,
+                    createdAt: serverTimestamp()
+                });
+            }
+        });
+
+        document.getElementById('img-upload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const storageRef = ref(storage, 'chats/' + Date.now() + "_" + file.name);
+            const snapshot = await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(snapshot.ref);
+            
+            await addDoc(collection(db, "messages"), {
+                user: currentUserPseudo,
+                text: "",
+                image: url,
+                createdAt: serverTimestamp()
+            });
+        });
+
+        function loadMessages() {
+            const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
+            onSnapshot(q, (snapshot) => {
+                const flow = document.getElementById('msg-flow');
+                flow.innerHTML = "";
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const div = document.createElement('div');
+                    div.className = 'msg';
+                    div.innerHTML = `
+                        <div class="avatar">${data.user[0].toUpperCase()}</div>
+                        <div class="msg-content">
+                            <span class="msg-user">${data.user}</span>
+                            <div class="msg-text">
+                                ${data.text}
+                                ${data.image ? `<img src="${data.image}">` : ''}
+                            </div>
+                        </div>
+                    `;
+                    flow.appendChild(div);
+                });
+                flow.scrollTop = flow.scrollHeight;
+            });
+        }
+    </script>
 </body>
 </html>
