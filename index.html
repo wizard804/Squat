@@ -7,49 +7,41 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --bg-black: #000000; /* Noir pur */
+            --bg-black: #000000;
             --bg-sidebar: #09090A;
             --bg-input: #111214;
             --blurple: #5865F2;
             --text-main: #FFFFFF;
             --text-muted: #80848E;
-            --danger: #F23F42;
         }
 
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg-black); color: white; overflow: hidden; }
 
-        /* --- AUTH SCREEN --- */
+        /* --- Écrans de Connexion --- */
         #auth-screen { position: fixed; inset: 0; z-index: 999; background: var(--bg-black); display: flex; align-items: center; justify-content: center; }
         .auth-card { background: #0F0F11; padding: 40px; border-radius: 12px; width: 360px; text-align: center; border: 1px solid #1e1f22; }
-        .auth-card h2 { margin-top: 0; font-size: 24px; margin-bottom: 8px; }
-        .auth-card p { color: var(--text-muted); margin-bottom: 24px; font-size: 14px; }
-        .auth-card input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 4px; border: none; background: #000; color: white; box-sizing: border-box; outline: none; border: 1px solid #1e1f22; }
-        .auth-card button { width: 100%; padding: 12px; background: var(--blurple); border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .auth-card input { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 4px; border: 1px solid #1e1f22; background: #000; color: white; box-sizing: border-box; outline: none; }
+        .auth-card button { width: 100%; padding: 12px; background: var(--blurple); border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .auth-link { color: var(--blurple); cursor: pointer; font-size: 13px; display: block; margin-top: 20px; }
 
-        /* --- APP STRUCTURE --- */
-        #main-app { display: none; height: 100vh; }
+        /* --- Interface Principale --- */
+        #main-app { display: none; height: 100vh; width: 100vw; }
         .sidebar { width: 240px; background: var(--bg-sidebar); border-right: 1px solid #1e1f22; display: flex; flex-direction: column; }
-        .chat-view { flex-grow: 1; display: flex; flex-direction: column; }
+        .chat-view { flex-grow: 1; display: flex; flex-direction: column; background: var(--bg-black); }
+        .header { height: 48px; border-bottom: 1px solid #1e1f22; display: flex; align-items: center; padding: 0 16px; font-weight: bold; }
         
-        .header { height: 48px; border-bottom: 1px solid #1e1f22; display: flex; align-items: center; padding: 0 16px; font-weight: bold; font-size: 15px; }
         .messages-list { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-
-        /* Messages */
         .msg { display: flex; gap: 16px; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--blurple); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; flex-shrink: 0; }
-        .msg-info { display: flex; align-items: baseline; gap: 8px; }
-        .msg-author { font-weight: bold; color: white; font-size: 15px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--blurple); display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+        .msg-author { font-weight: bold; font-size: 15px; margin-right: 8px; }
         .msg-time { font-size: 11px; color: var(--text-muted); }
-        .msg-text { color: var(--text-main); font-size: 15px; line-height: 1.4; margin-top: 2px; }
-        .msg-img { max-width: 400px; max-height: 300px; border-radius: 8px; margin-top: 10px; display: block; border: 1px solid #333; }
+        .msg-text { color: var(--text-main); margin-top: 4px; word-break: break-word; }
+        .msg-img { max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px; border: 1px solid #333; }
 
-        /* Input Area */
         .input-area { padding: 0 20px 24px; }
         .input-bar { background: var(--bg-input); padding: 10px 16px; border-radius: 8px; display: flex; align-items: center; gap: 15px; }
-        #chat-input { background: transparent; border: none; color: white; flex-grow: 1; outline: none; font-size: 15px; }
+        #chat-input { background: transparent; border: none; color: white; flex-grow: 1; outline: none; }
         .plus-btn { color: var(--text-muted); cursor: pointer; font-size: 20px; }
-        .plus-btn:hover { color: #fff; }
     </style>
 </head>
 <body>
@@ -57,32 +49,29 @@
     <div id="auth-screen">
         <div class="auth-card" id="login-box">
             <h2>Bon retour !</h2>
-            <p>On est trop contents de te revoir !</p>
             <input type="email" id="l-email" placeholder="E-mail">
             <input type="password" id="l-pass" placeholder="Mot de passe">
-            <button onclick="login()">Se connecter</button>
-            <span class="auth-link" onclick="toggleAuth(true)">Besoin d'un compte ? S'inscrire</span>
+            <button id="btn-login">Se connecter</button>
+            <span class="auth-link" id="link-to-reg">Besoin d'un compte ? S'inscrire</span>
         </div>
         <div class="auth-card" id="reg-box" style="display:none;">
             <h2>Créer un compte</h2>
-            <p>Rejoins le Squat dès maintenant.</p>
             <input type="text" id="r-pseudo" placeholder="Pseudo (unique)">
             <input type="email" id="r-email" placeholder="E-mail">
             <input type="password" id="r-pass" placeholder="Mot de passe">
-            <button onclick="register()">S'inscrire</button>
-            <span class="auth-link" onclick="toggleAuth(false)">Déjà un compte ?</span>
+            <button id="btn-reg">S'inscrire</button>
+            <span class="auth-link" id="link-to-login">Déjà un compte ?</span>
         </div>
     </div>
 
     <div id="main-app">
         <aside class="sidebar">
             <div class="header">🏠 Squat</div>
-            <div style="padding: 20px 10px 10px; font-size: 11px; color: var(--text-muted); font-weight: bold; letter-spacing: 0.5px;">SALONS TEXTUELS</div>
-            <div style="padding: 8px 12px; background: #ffffff11; color: white; margin: 0 8px; border-radius: 4px; cursor: pointer;"><i class="fa-solid fa-hashtag" style="margin-right: 8px; color: var(--text-muted);"></i>général</div>
+            <div style="padding: 20px 10px 10px; font-size: 11px; color: var(--text-muted); font-weight: bold;">SALONS TEXTUELS</div>
+            <div style="padding: 8px 12px; background: #ffffff11; margin: 0 8px; border-radius: 4px;"><i class="fa-solid fa-hashtag"></i> général</div>
         </aside>
-
         <main class="chat-view">
-            <div class="header"><i class="fa-solid fa-hashtag" style="margin-right: 10px; color: var(--text-muted);"></i>général</div>
+            <div class="header"># général</div>
             <div class="messages-list" id="msg-container"></div>
             <div class="input-area">
                 <form id="chat-form" class="input-bar">
@@ -117,76 +106,70 @@
 
         let myPseudo = "";
 
-        window.toggleAuth = (showReg) => {
-            document.getElementById('login-box').style.display = showReg ? 'none' : 'block';
-            document.getElementById('reg-box').style.display = showReg ? 'block' : 'none';
-        }
+        // Gestion des écrans
+        document.getElementById('link-to-reg').onclick = () => { document.getElementById('login-box').style.display = 'none'; document.getElementById('reg-box').style.display = 'block'; };
+        document.getElementById('link-to-login').onclick = () => { document.getElementById('login-box').style.display = 'block'; document.getElementById('reg-box').style.display = 'none'; };
 
-        window.register = async () => {
+        // INSCRIPTION
+        document.getElementById('btn-reg').onclick = async () => {
             const email = document.getElementById('r-email').value;
             const pass = document.getElementById('r-pass').value;
             const pseudo = document.getElementById('r-pseudo').value.trim().toLowerCase();
 
-            if(!pseudo || pseudo.length < 3) return alert("Pseudo trop court !");
-
-            const check = await getDoc(doc(db, "pseudos", pseudo));
-            if(check.exists()) return alert("Ce pseudo est déjà utilisé !");
-
+            if(!pseudo || !email || !pass) return alert("Remplis tout !");
+            
             try {
+                const check = await getDoc(doc(db, "pseudos", pseudo));
+                if(check.exists()) return alert("Pseudo déjà pris !");
+
                 const res = await createUserWithEmailAndPassword(auth, email, pass);
                 await setDoc(doc(db, "users", res.user.uid), { pseudo: pseudo });
                 await setDoc(doc(db, "pseudos", pseudo), { uid: res.user.uid });
-            } catch (err) { alert("Erreur : " + err.message); }
-        }
+            } catch (e) { alert(e.message); }
+        };
 
-        window.login = async () => {
+        // CONNEXION
+        document.getElementById('btn-login').onclick = async () => {
             const email = document.getElementById('l-email').value;
             const pass = document.getElementById('l-pass').value;
-            try { await signInWithEmailAndPassword(auth, email, pass); } catch (err) { alert("Email ou mot de passe incorrect."); }
-        }
+            try { await signInWithEmailAndPassword(auth, email, pass); } catch (e) { alert("Erreur : " + e.message); }
+        };
 
+        // Surveillance de l'état connecté
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const snap = await getDoc(doc(db, "users", user.uid));
-                myPseudo = snap.data().pseudo;
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('main-app').style.display = 'flex';
-                listenMsgs();
+                if(snap.exists()) {
+                    myPseudo = snap.data().pseudo;
+                    document.getElementById('auth-screen').style.display = 'none';
+                    document.getElementById('main-app').style.display = 'flex';
+                    listenMsgs();
+                }
             } else {
                 document.getElementById('auth-screen').style.display = 'flex';
                 document.getElementById('main-app').style.display = 'none';
             }
         });
 
-        const form = document.getElementById('chat-form');
-        const input = document.getElementById('chat-input');
-        
-        form.onsubmit = async (e) => {
+        // Envoi Message
+        const chatForm = document.getElementById('chat-form');
+        chatForm.onsubmit = async (e) => {
             e.preventDefault();
+            const input = document.getElementById('chat-input');
             if(!input.value.trim()) return;
-            const text = input.value;
+            const val = input.value;
             input.value = "";
-            await addDoc(collection(db, "messages"), {
-                author: myPseudo,
-                content: text,
-                type: 'text',
-                time: serverTimestamp()
-            });
+            await addDoc(collection(db, "messages"), { author: myPseudo, content: val, type: 'text', time: serverTimestamp() });
         };
 
+        // Envoi Image
         document.getElementById('img-file').onchange = async (e) => {
             const file = e.target.files[0];
             if(!file) return;
-            const path = `chats/${Date.now()}_${file.name}`;
-            const sRef = ref(storage, path);
+            const sRef = ref(storage, `chats/${Date.now()}_${file.name}`);
             await uploadBytes(sRef, file);
             const url = await getDownloadURL(sRef);
-            await addDoc(collection(db, "messages"), {
-                author: myPseudo,
-                content: url,
-                type: 'image',
-                time: serverTimestamp()
-            });
+            await addDoc(collection(db, "messages"), { author: myPseudo, content: url, type: 'image', time: serverTimestamp() });
         };
 
         function listenMsgs() {
@@ -202,13 +185,8 @@
                     div.innerHTML = `
                         <div class="avatar">${m.author[0].toUpperCase()}</div>
                         <div class="msg-content">
-                            <div class="msg-info">
-                                <span class="msg-author">${m.author}</span>
-                                <span class="msg-time">Aujourd'hui à ${date}</span>
-                            </div>
-                            <div class="msg-text">
-                                ${m.type === 'text' ? m.content : `<img src="${m.content}" class="msg-img">`}
-                            </div>
+                            <div class="msg-info"><span class="msg-author">${m.author}</span><span class="msg-time">${date}</span></div>
+                            <div class="msg-text">${m.type === 'text' ? m.content : `<img src="${m.content}" class="msg-img">`}</div>
                         </div>
                     `;
                     cont.appendChild(div);
